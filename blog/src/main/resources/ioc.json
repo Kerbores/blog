@@ -1,0 +1,110 @@
+var ioc = {
+	config : {
+		type : "org.nutz.ioc.impl.PropertiesProxy",
+		fields : {
+			paths : [ "dataSource.properties" ]
+		}
+	},
+	sqls : {
+		type : "org.nutz.ioc.impl.PropertiesProxy",
+		fields : {
+			paths : [ "sql" ]
+		}
+	},
+	txNONE : {
+		type : "org.nutz.aop.interceptor.TransactionInterceptor",
+		args : [0]
+	},
+	txREAD_UNCOMMITTED : {
+		type : "org.nutz.aop.interceptor.TransactionInterceptor",
+		args : [1]
+	},
+	txREAD_COMMITTED : {
+		type : "org.nutz.aop.interceptor.TransactionInterceptor",
+		args : [2]
+	},
+	txREPEATABLE_READ : {
+		type : "org.nutz.aop.interceptor.TransactionInterceptor",
+		args : [4]
+	},
+	txSERIALIZABLE : {
+		type : "org.nutz.aop.interceptor.TransactionInterceptor",
+		args : [8]
+	},
+	dataSource : {
+		type : "com.alibaba.druid.pool.DruidDataSource",
+		events : {
+			depose : "close"
+		},
+		fields : {
+			url : {
+				java : "$dbLoader.getJdbcUrl()"
+			},
+			username : {
+				java : "$config.get('db-user')"
+			},
+			password : {
+				java : "$config.get('db-pwd')"
+			},
+			maxActive:{
+				java : "$config.get('db-pool-max')"
+			},
+			initialSize  : {
+				java:"$config.get('db-pool-init')"
+			},
+			maxWait : {
+				java : "$config.get('db-pool-wait')"
+			},
+			minIdle : {
+				java : "$config.get('db-pool-min')"
+			},
+			timeBetweenEvictionRunsMillis:{
+				java : "$config.get('db-time-betw')"
+			},
+			minEvictableIdleTimeMillis:{
+				java : "$config.get('db-time-met')"
+			},
+			validationQuery:{
+				java : "$config.get('db-query-val')"
+			},
+			testWhileIdle:{
+				java : "$config.get('db-test-idle')"
+			},
+			testOnBorrow:{
+				java : "$config.get('db-test-borr')"
+			},
+			testOnReturn:{
+				java : "$config.get('db-test-return')"
+			},
+			filters:{
+				java : "$config.get('db-filters')"
+			}
+		}
+	},
+	dao : {
+		type : "org.nutz.dao.impl.NutDao",
+		args : 
+			[{refer : "dataSource"}]
+		
+	},
+	log : {
+		type :"org.nutz.aop.interceptor.LoggingMethodInterceptor"
+	},
+	$aop : {
+	type : "org.nutz.ioc.aop.config.impl.ComboAopConfigration",
+	fields : {
+		aopConfigrations  : [
+			{	type : "org.nutz.ioc.aop.config.impl.JsonAopConfigration",
+				fields : {
+    				itemList : [
+            			["com\\.kerbores\\.purch\\..+",".+","ioc:log"],
+            			["com\\.kerbores\\.purch\\.service\\..+",".+","ioc:txREAD_COMMITTED"]
+            			["com\\.kerbores\\.purch\\.modules\\..+","^(?!.*(_)).*$","ioc:dataclear"]
+    				]
+				}
+			},
+			{	type : "org.nutz.ioc.aop.config.impl.AnnotationAopConfigration"}
+		]
+	}
+}
+};
